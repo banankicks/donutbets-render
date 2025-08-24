@@ -232,6 +232,7 @@ const healthServer = http.createServer((req, res) => {
                         // Store bot data if provided
                         if (data.bot_data) {
                             botData[data.bot_name] = data.bot_data;
+                            console.log(`Stored bot data for ${data.bot_name}:`, data.bot_data);
                         }
                         result = await startBot(data.bot_name);
                         break;

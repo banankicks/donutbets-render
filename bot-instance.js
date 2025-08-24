@@ -75,7 +75,7 @@ class BotInstance {
     async getAuth() {
         const loginType = this.botData.login_type;
         console.log(`Getting auth for ${this.botName}, login type: ${loginType}`);
-        console.log('Bot data:', this.botData);
+        console.log('Bot data:', JSON.stringify(this.botData, null, 2));
         
         if (loginType === 'mineflyer') {
             return await this.getMineflyerAuth();
@@ -110,10 +110,16 @@ class BotInstance {
             throw new Error('TheAltening token is required');
         }
         
+        console.log(`TheAltening auth for ${this.botName}:`, {
+            token: token,
+            isEmail: token.includes('@alt.com'),
+            loginType: this.botData.login_type
+        });
+        
         // Use thealt-auth plugin for TheAltening authentication
         return {
             type: 'thealtening',
-            username: token // The token (email or generated from API key)
+            username: token // The token should be the generated email (e.g., example@alt.com)
         };
     }
     
