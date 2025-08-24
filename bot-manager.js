@@ -179,9 +179,31 @@ function getAvailableServers() {
     }));
 }
 
+// Load bots from memory (synced from web server)
+function loadBots() {
+    return botData || {};
+}
+
+// Save bots to memory (will be synced to web server)
+function saveBots(bots) {
+    botData = bots;
+    return true;
+}
+
 // Health check endpoint for Render
 const http = require('http');
 const healthServer = http.createServer((req, res) => {
+    // Add CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+        res.writeHead(200);
+        res.end();
+        return;
+    }
     if (req.url === '/health') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
@@ -213,13 +235,13 @@ const healthServer = http.createServer((req, res) => {
                         result = await stopBot(data.bot_name);
                         break;
                     case 'get_bot_status':
-                        result = { status: getBotStatus(data.bot_name) };
+                        result = { success: true, status: getBotStatus(data.bot_name) };
                         break;
                     case 'get_all_bots_status':
-                        result = { bots: getAllBotsStatus() };
+                        result = { success: true, bots: getAllBotsStatus() };
                         break;
                     case 'get_servers':
-                        result = { servers: getAvailableServers() };
+                        result = { success: true, servers: getAvailableServers() };
                         break;
                     case 'sync_bots':
                         // Sync bot data from web server
