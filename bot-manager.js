@@ -229,6 +229,10 @@ const healthServer = http.createServer((req, res) => {
                 let result;
                 switch (action) {
                     case 'start_bot':
+                        // Store bot data if provided
+                        if (data.bot_data) {
+                            botData[data.bot_name] = data.bot_data;
+                        }
                         result = await startBot(data.bot_name);
                         break;
                     case 'stop_bot':
