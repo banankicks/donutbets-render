@@ -1,4 +1,5 @@
 const mineflayer = require('mineflayer');
+const altAuth = require('mineflayer-alt-auth');
 
 class BotInstance {
     constructor(botName, botData, serverInfo) {
@@ -21,17 +22,28 @@ class BotInstance {
                 throw new Error('Authentication failed');
             }
             
-            // Create bot instance
-            this.bot = mineflayer.createBot({
+            // Create bot instance with alt-auth plugin
+            const botOptions = {
                 host: process.env.MINECRAFT_HOST || 'donutsmp.net',
                 port: parseInt(process.env.MINECRAFT_PORT) || 25565, // Default Minecraft port
                 username: auth.username,
-                auth: auth.type,
-                password: auth.password,
                 version: '1.20.1', // Use 1.20.1 version
                 authTitle: 'DonutBets Bot',
                 skipValidation: false
-            });
+            };
+            
+            // Add alt-auth for TheAltening
+            if (auth.type === 'thealtening') {
+                botOptions.auth = altAuth({
+                    cache: false,
+                    provider: 'thealtening'
+                });
+            } else {
+                botOptions.auth = auth.type;
+                botOptions.password = auth.password;
+            }
+            
+            this.bot = mineflayer.createBot(botOptions);
             
             // Set up event handlers
             this.setupEventHandlers();
@@ -48,7 +60,8 @@ class BotInstance {
                 username: auth.username,
                 type: auth.type,
                 host: process.env.MINECRAFT_HOST || 'donutsmp.net',
-                port: parseInt(process.env.MINECRAFT_PORT) || 25565
+                port: parseInt(process.env.MINECRAFT_PORT) || 25565,
+                serverInfo: this.serverInfo
             });
             throw error;
         }
@@ -83,29 +96,18 @@ class BotInstance {
     }
     
     async getTheAlteningAuth() {
-        // For TheAltening, support both direct tokens and API keys
+        // For TheAltening, use the alt-auth plugin
         const token = this.botData.thealtening_token;
         
         if (!token) {
             throw new Error('TheAltening token is required');
         }
         
-        // Check if it's a direct token (email) or generated from API key
-        if (token.includes('@alt.com')) {
-            // Direct token - use offline mode
-            return {
-                type: 'offline',
-                username: token, // The token is the email (e.g., example@alt.com)
-                password: 'anything' // Any password works for TheAltening
-            };
-        } else {
-            // Generated token from API key - use offline mode
-            return {
-                type: 'offline',
-                username: token, // The generated token
-                password: 'anything' // Any password works for TheAltening
-            };
-        }
+        // Use thealt-auth plugin for TheAltening authentication
+        return {
+            type: 'thealtening',
+            username: token // The token (email or generated from API key)
+        };
     }
     
     setupEventHandlers() {
@@ -164,8 +166,8 @@ class BotInstance {
     async waitForConnection() {
         return new Promise((resolve, reject) => {
             const timeout = setTimeout(() => {
-                reject(new Error('Connection timeout'));
-            }, 30000); // 30 second timeout
+                reject(new Error('Connection timeout - server might be offline or unreachable'));
+            }, 60000); // 60 second timeout
             
             this.bot.once('spawn', () => {
                 clearTimeout(timeout);
@@ -180,6 +182,11 @@ class BotInstance {
             this.bot.once('kicked', (reason) => {
                 clearTimeout(timeout);
                 reject(new Error(`Kicked: ${reason}`));
+            });
+            
+            this.bot.once('end', () => {
+                clearTimeout(timeout);
+                reject(new Error('Connection ended unexpectedly'));
             });
         });
     }
