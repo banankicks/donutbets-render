@@ -152,8 +152,8 @@ chmod +x deploy.sh
 
 ## 🎮 Minecraft Bot Funkciók
 
-- ✅ **Valós Microsoft auth** (email/jelszó)
-- ✅ **Valós TheAltening auth** (API token)
+- ✅ **Microsoft auth** (email/jelszó) - Mineflayer beépített auth
+- ✅ **TheAltening auth** (API token) - Offline mode
 - ✅ **Automatikus újracsatlakozás**
 - ✅ **Chat üzenetek kezelése**
 - ✅ **Pozíció követés**

@@ -1,5 +1,4 @@
 const mineflayer = require('mineflayer');
-const yggdrasil = require('node-yggdrasil');
 
 class BotInstance {
     constructor(botName, botData, serverInfo) {
@@ -31,11 +30,7 @@ class BotInstance {
                 password: auth.password,
                 version: '1.20.1', // Adjust version as needed
                 authTitle: 'DonutBets Bot',
-                skipValidation: false,
-                client: {
-                    username: auth.username,
-                    version: '1.20.1'
-                }
+                skipValidation: false
             });
             
             // Set up event handlers
@@ -66,7 +61,7 @@ class BotInstance {
     }
     
     async getMineflyerAuth() {
-        // For Mineflyer, we need to authenticate with Microsoft/Mojang
+        // For Mineflyer, use Microsoft authentication
         const email = this.botData.mineflyer_email;
         const password = this.botData.mineflyer_password;
         
@@ -74,67 +69,26 @@ class BotInstance {
             throw new Error('Mineflyer email and password are required');
         }
         
-        try {
-            // Authenticate with Microsoft/Mojang
-            const authResult = await yggdrasil.authenticate({
-                username: email,
-                password: password,
-                clientToken: 'donutbets-bot-client'
-            });
-            
-            return {
-                type: 'microsoft',
-                username: this.botData.player_username || authResult.selectedProfile.name,
-                accessToken: authResult.accessToken,
-                clientToken: authResult.clientToken,
-                selectedProfile: authResult.selectedProfile
-            };
-            
-        } catch (error) {
-            console.error('Mineflyer authentication error:', error);
-            throw new Error('Mineflyer authentication failed: ' + error.message);
-        }
+        return {
+            type: 'microsoft',
+            username: this.botData.player_username || email,
+            password: password
+        };
     }
     
     async getTheAlteningAuth() {
-        // For TheAltening, we need to authenticate with their API first
+        // For TheAltening, use offline mode
         const token = this.botData.thealtening_token;
         
         if (!token) {
             throw new Error('TheAltening token is required');
         }
         
-        try {
-            // TheAltening API authentication
-            const response = await fetch('https://api.thealtening.com/v1/authenticate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                
-                return {
-                    type: 'offline',
-                    username: this.botData.player_username || data.username || 'TheAlteningBot',
-                    password: token
-                };
-            } else {
-                throw new Error('TheAltening API authentication failed');
-            }
-            
-        } catch (error) {
-            console.error('TheAltening authentication error:', error);
-            // Fallback to offline mode with stored username
-            return {
-                type: 'offline',
-                username: this.botData.player_username || 'TheAlteningBot',
-                password: token
-            };
-        }
+        return {
+            type: 'offline',
+            username: this.botData.player_username || 'TheAlteningBot',
+            password: token
+        };
     }
     
     setupEventHandlers() {

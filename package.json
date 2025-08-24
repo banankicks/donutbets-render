@@ -15,8 +15,6 @@
   },
   "dependencies": {
     "mineflayer": "^4.32.0",
-    "minecraft-protocol": "^1.47.0",
-    "node-yggdrasil": "^3.0.0",
     "ws": "^8.16.0"
   },
   "keywords": [
