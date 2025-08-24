@@ -14,10 +14,11 @@ class BotInstance {
     }
     
     async connect() {
+        let auth = null;
         try {
             console.log(`Connecting bot ${this.botName} to donutsmp.net via ${this.serverInfo.name}...`);
             
-            const auth = await this.getAuth();
+            auth = await this.getAuth();
             if (!auth) {
                 throw new Error('Authentication failed');
             }
@@ -56,19 +57,25 @@ class BotInstance {
             
         } catch (error) {
             console.error(`Error connecting bot ${this.botName}:`, error);
-            console.error('Auth details:', {
-                username: auth.username,
-                type: auth.type,
-                host: process.env.MINECRAFT_HOST || 'donutsmp.net',
-                port: parseInt(process.env.MINECRAFT_PORT) || 25565,
-                serverInfo: this.serverInfo
-            });
+            if (auth) {
+                console.error('Auth details:', {
+                    username: auth.username,
+                    type: auth.type,
+                    host: process.env.MINECRAFT_HOST || 'donutsmp.net',
+                    port: parseInt(process.env.MINECRAFT_PORT) || 25565,
+                    serverInfo: this.serverInfo
+                });
+            } else {
+                console.error('No auth details available');
+            }
             throw error;
         }
     }
     
     async getAuth() {
         const loginType = this.botData.login_type;
+        console.log(`Getting auth for ${this.botName}, login type: ${loginType}`);
+        console.log('Bot data:', this.botData);
         
         if (loginType === 'mineflyer') {
             return await this.getMineflyerAuth();
