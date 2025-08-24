@@ -73,17 +73,11 @@ class BotInstance {
     }
     
     async getAuth() {
-        const loginType = this.botData.login_type;
-        console.log(`Getting auth for ${this.botName}, login type: ${loginType}`);
+        // Default to Mineflyer authentication
+        console.log(`Getting auth for ${this.botName} using Mineflyer`);
         console.log('Bot data:', JSON.stringify(this.botData, null, 2));
         
-        if (loginType === 'mineflyer') {
-            return await this.getMineflyerAuth();
-        } else if (loginType === 'thealtening') {
-            return await this.getTheAlteningAuth();
-        } else {
-            throw new Error(`Unsupported login type: ${loginType}`);
-        }
+        return await this.getMineflyerAuth();
     }
     
     async getMineflyerAuth() {
@@ -155,6 +149,11 @@ class BotInstance {
             this.handleChat(username, message);
         });
         
+        // Handle TPA requests and other messages
+        this.bot.on('message', (message) => {
+            this.handleMessage(message);
+        });
+        
         this.bot.on('playerJoined', (player) => {
             console.log(`[${this.botName}@${this.serverInfo.name}] Player joined: ${player.username}`);
         });
@@ -222,6 +221,67 @@ class BotInstance {
             setTimeout(() => {
                 this.sendChat(`Hello ${username}! I'm ${this.botName}, a DonutBets bot running on ${this.serverInfo.name}.`);
             }, 1000);
+        }
+    }
+    
+    handleMessage(message) {
+        // Handle TPA requests and other system messages
+        const messageText = message.toString();
+        
+        // Check for TPA request pattern: "PlayerName sent you a tpa request"
+        const tpaMatch = messageText.match(/(\w+) sent you a tpa request/i);
+        if (tpaMatch) {
+            const fromPlayer = tpaMatch[1];
+            console.log(`[${this.botName}@${this.serverInfo.name}] TPA request received from: ${fromPlayer}`);
+            
+            // Save TPA request to file for web server to check
+            this.saveTpaRequest(fromPlayer);
+            
+            // Don't accept the TPA request - just log it for authentication
+            console.log(`[${this.botName}@${this.serverInfo.name}] TPA request logged for authentication from: ${fromPlayer}`);
+        }
+    }
+    
+    saveTpaRequest(fromPlayer) {
+        const fs = require('fs');
+        const path = require('path');
+        
+        // Create data directory if it doesn't exist
+        const dataDir = path.join(__dirname, '..', 'data');
+        if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir, { recursive: true });
+        }
+        
+        const tpaRequestsFile = path.join(dataDir, 'tpa_requests.json');
+        
+        // Load existing requests
+        let tpaRequests = [];
+        if (fs.existsSync(tpaRequestsFile)) {
+            try {
+                tpaRequests = JSON.parse(fs.readFileSync(tpaRequestsFile, 'utf8'));
+            } catch (error) {
+                console.error('Error reading TPA requests file:', error);
+                tpaRequests = [];
+            }
+        }
+        
+        // Add new request
+        const newRequest = {
+            from_player: fromPlayer,
+            to_bot: this.botName,
+            timestamp: Math.floor(Date.now() / 1000),
+            status: 'pending',
+            server: this.serverInfo.name
+        };
+        
+        tpaRequests.push(newRequest);
+        
+        // Save back to file
+        try {
+            fs.writeFileSync(tpaRequestsFile, JSON.stringify(tpaRequests, null, 2));
+            console.log(`[${this.botName}@${this.serverInfo.name}] Saved TPA request from ${fromPlayer}`);
+        } catch (error) {
+            console.error('Error saving TPA request:', error);
         }
     }
     
