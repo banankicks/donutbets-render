@@ -1,5 +1,4 @@
 const mineflayer = require('mineflayer');
-const altAuth = require('mineflayer-alt-auth');
 
 class BotInstance {
     constructor(botName, botData, serverInfo) {
@@ -22,7 +21,7 @@ class BotInstance {
                 throw new Error('Authentication failed');
             }
             
-            // Create bot instance with alt-auth plugin
+            // Create bot instance
             this.bot = mineflayer.createBot({
                 host: process.env.MINECRAFT_HOST || 'donutsmp.net',
                 port: parseInt(process.env.MINECRAFT_PORT) || 25565, // Default Minecraft port
@@ -33,9 +32,6 @@ class BotInstance {
                 authTitle: 'DonutBets Bot',
                 skipValidation: false
             });
-            
-            // Load alt-auth plugin for TheAltening support
-            altAuth(this.bot);
             
             // Set up event handlers
             this.setupEventHandlers();
@@ -48,6 +44,12 @@ class BotInstance {
             
         } catch (error) {
             console.error(`Error connecting bot ${this.botName}:`, error);
+            console.error('Auth details:', {
+                username: auth.username,
+                type: auth.type,
+                host: process.env.MINECRAFT_HOST || 'donutsmp.net',
+                port: parseInt(process.env.MINECRAFT_PORT) || 25565
+            });
             throw error;
         }
     }
@@ -81,19 +83,29 @@ class BotInstance {
     }
     
     async getTheAlteningAuth() {
-        // For TheAltening, use the alt-auth plugin
+        // For TheAltening, support both direct tokens and API keys
         const token = this.botData.thealtening_token;
         
         if (!token) {
             throw new Error('TheAltening token is required');
         }
         
-        // Use alt-auth plugin for TheAltening authentication
-        return {
-            type: 'thealtening',
-            username: token, // The token is the email (e.g., example@alt.com)
-            password: 'anything' // Any password works for TheAltening
-        };
+        // Check if it's a direct token (email) or generated from API key
+        if (token.includes('@alt.com')) {
+            // Direct token - use offline mode
+            return {
+                type: 'offline',
+                username: token, // The token is the email (e.g., example@alt.com)
+                password: 'anything' // Any password works for TheAltening
+            };
+        } else {
+            // Generated token from API key - use offline mode
+            return {
+                type: 'offline',
+                username: token, // The generated token
+                password: 'anything' // Any password works for TheAltening
+            };
+        }
     }
     
     setupEventHandlers() {
