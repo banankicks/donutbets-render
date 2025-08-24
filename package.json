@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "mineflayer": "^4.32.0",
+    "mineflayer-alt-auth": "^1.0.0",
     "ws": "^8.16.0"
   },
   "keywords": [

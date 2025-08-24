@@ -1,4 +1,5 @@
 const mineflayer = require('mineflayer');
+const altAuth = require('mineflayer-alt-auth');
 
 class BotInstance {
     constructor(botName, botData, serverInfo) {
@@ -21,17 +22,20 @@ class BotInstance {
                 throw new Error('Authentication failed');
             }
             
-            // Create bot instance
+            // Create bot instance with alt-auth plugin
             this.bot = mineflayer.createBot({
                 host: process.env.MINECRAFT_HOST || 'donutsmp.net',
                 port: parseInt(process.env.MINECRAFT_PORT) || 25565, // Default Minecraft port
                 username: auth.username,
                 auth: auth.type,
                 password: auth.password,
-                version: '1.20.1', // Adjust version as needed
+                version: '1.20.1', // Use 1.20.1 version
                 authTitle: 'DonutBets Bot',
                 skipValidation: false
             });
+            
+            // Load alt-auth plugin for TheAltening support
+            altAuth(this.bot);
             
             // Set up event handlers
             this.setupEventHandlers();
@@ -77,17 +81,18 @@ class BotInstance {
     }
     
     async getTheAlteningAuth() {
-        // For TheAltening, use offline mode
+        // For TheAltening, use the alt-auth plugin
         const token = this.botData.thealtening_token;
         
         if (!token) {
             throw new Error('TheAltening token is required');
         }
         
+        // Use alt-auth plugin for TheAltening authentication
         return {
-            type: 'offline',
-            username: this.botData.player_username || 'TheAlteningBot',
-            password: token
+            type: 'thealtening',
+            username: token, // The token is the email (e.g., example@alt.com)
+            password: 'anything' // Any password works for TheAltening
         };
     }
     
