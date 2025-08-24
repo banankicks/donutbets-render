@@ -1,0 +1,31 @@
+{
+  "name": "donutbets-renderbots",
+  "version": "1.0.0",
+  "description": "DonutBets Bot System for Render",
+  "main": "bot-manager.js",
+  "scripts": {
+    "start": "node bot-manager.js",
+    "start:bot1": "PORT_INDEX=0 node bot-manager.js",
+    "start:bot2": "PORT_INDEX=1 node bot-manager.js",
+    "start:bot3": "PORT_INDEX=2 node bot-manager.js",
+    "start:bot4": "PORT_INDEX=3 node bot-manager.js",
+    "start:bot5": "PORT_INDEX=4 node bot-manager.js",
+    "start:all": "npm run start:bot1 & npm run start:bot2 & npm run start:bot3 & npm run start:bot4 & npm run start:bot5",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "mineflayer": "^4.32.0",
+    "minecraft-protocol": "^1.47.0",
+    "node-yggdrasil": "^3.0.0",
+    "ws": "^8.16.0"
+  },
+  "keywords": [
+    "minecraft",
+    "bot",
+    "mineflayer",
+    "casino",
+    "render"
+  ],
+  "author": "DonutBets",
+  "license": "MIT"
+} 
