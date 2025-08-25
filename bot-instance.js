@@ -81,7 +81,12 @@ class BotInstance {
     }
     
     async getMineflyerAuth() {
-        // For Mineflyer, use Microsoft authentication
+        // Check if using code-based authentication
+        if (this.botData.login_type === 'mineflyer_code' && this.botData.mineflyer_code) {
+            return await this.getMineflyerCodeAuth();
+        }
+        
+        // Legacy email/password authentication
         const email = this.botData.mineflyer_email;
         const password = this.botData.mineflyer_password;
         
@@ -89,10 +94,38 @@ class BotInstance {
             throw new Error('Mineflyer email and password are required');
         }
         
+        // Check if it's an original Minecraft account (doesn't contain @)
+        if (!email.includes('@')) {
+            // Original Minecraft account (username-based)
+            return {
+                type: 'mojang',
+                username: email,
+                password: password
+            };
+        } else {
+            // Microsoft account (email-based)
+            return {
+                type: 'microsoft',
+                username: this.botData.player_username || email,
+                password: password
+            };
+        }
+    }
+    
+    async getMineflyerCodeAuth() {
+        const code = this.botData.mineflyer_code;
+        
+        if (!code) {
+            throw new Error('Mineflyer code is required');
+        }
+        
+        // In a real implementation, you would validate the code with Mineflyer's API
+        // For now, we'll use the stored username from the authentication process
+        
         return {
-            type: 'microsoft',
-            username: this.botData.player_username || email,
-            password: password
+            type: 'mineflyer_code',
+            username: this.botData.player_username,
+            code: code
         };
     }
     
