@@ -113,14 +113,21 @@ class BotInstance {
     }
     
     async getMineflyerCodeAuth() {
+        // Check if we have a valid Mineflyer session
+        if (this.botData.mineflyer_session) {
+            return {
+                type: 'mineflyer_session',
+                username: this.botData.player_username,
+                session_id: this.botData.mineflyer_session
+            };
+        }
+        
+        // Fallback to code-based auth
         const code = this.botData.mineflyer_code;
         
         if (!code) {
-            throw new Error('Mineflyer code is required');
+            throw new Error('Mineflyer authentication required. Please authenticate via admin panel first.');
         }
-        
-        // In a real implementation, you would validate the code with Mineflyer's API
-        // For now, we'll use the stored username from the authentication process
         
         return {
             type: 'mineflyer_code',
