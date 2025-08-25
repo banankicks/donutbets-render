@@ -1,5 +1,4 @@
 const mineflayer = require('mineflayer');
-const altAuth = require('mineflayer-alt-auth');
 
 class BotInstance {
     constructor(botName, botData, serverInfo) {
@@ -23,27 +22,21 @@ class BotInstance {
                 throw new Error('Authentication failed');
             }
             
-            // Create bot instance with alt-auth plugin
+            // Create bot instance based on Mineflayer documentation
             const botOptions = {
                 host: process.env.MINECRAFT_HOST || 'donutsmp.net',
-                port: parseInt(process.env.MINECRAFT_PORT) || 25565, // Default Minecraft port
-                username: auth.username,
-                version: '1.20.1', // Use 1.20.1 version
-                authTitle: 'DonutBets Bot',
-                skipValidation: false
+                port: parseInt(process.env.MINECRAFT_PORT) || 25565,
+                version: '1.20.1',
+                keepAlive: true
             };
             
-            // Add alt-auth for Microsoft authentication (Mineflyer)
+            // Add authentication based on type
             if (auth.type === 'microsoft') {
-                botOptions.auth = altAuth({
-                    cache: false,
-                    provider: 'microsoft'
-                });
-            } else if (auth.type === 'thealtening') {
-                botOptions.auth = altAuth({
-                    cache: false,
-                    provider: 'thealtening'
-                });
+                botOptions.auth = 'microsoft';
+                botOptions.username = auth.username;
+            } else if (auth.type === 'offline') {
+                botOptions.auth = 'offline';
+                botOptions.username = auth.username;
             } else {
                 botOptions.auth = auth.type;
                 botOptions.password = auth.password;
@@ -125,16 +118,14 @@ class BotInstance {
             throw new Error('Mineflyer authentication required. Please start authentication via admin panel first.');
         }
         
-        // According to Mineflayer documentation, we need to use mineflayer-alt-auth
-        // This will display a code in the console that needs to be entered on Microsoft.com/link
-        console.log(`[${this.botName}] Starting Mineflyer authentication...`);
+        // According to Mineflayer documentation, Microsoft auth will show a code in console
+        console.log(`[${this.botName}] Starting Microsoft authentication...`);
         console.log(`[${this.botName}] Authentication code will be displayed in console`);
         console.log(`[${this.botName}] Please enter the code on Microsoft.com/link`);
         
         return {
             type: 'microsoft',
-            username: this.botData.player_username || 'DonutBetsBot',
-            authTitle: 'Mineflyer Authentication'
+            username: this.botData.player_username || 'DonutBetsBot'
         };
     }
     
