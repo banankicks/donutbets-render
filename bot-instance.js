@@ -33,8 +33,13 @@ class BotInstance {
                 skipValidation: false
             };
             
-            // Add alt-auth for TheAltening
-            if (auth.type === 'thealtening') {
+            // Add alt-auth for Microsoft authentication (Mineflyer)
+            if (auth.type === 'microsoft') {
+                botOptions.auth = altAuth({
+                    cache: false,
+                    provider: 'microsoft'
+                });
+            } else if (auth.type === 'thealtening') {
                 botOptions.auth = altAuth({
                     cache: false,
                     provider: 'thealtening'
@@ -113,26 +118,23 @@ class BotInstance {
     }
     
     async getMineflyerCodeAuth() {
-        // Check if we have a valid Mineflyer session
-        if (this.botData.mineflyer_session) {
-            return {
-                type: 'mineflyer_session',
-                username: this.botData.player_username,
-                session_id: this.botData.mineflyer_session
-            };
+        // Check for auth code from admin panel
+        const authCode = this.botData.auth_code;
+        
+        if (!authCode) {
+            throw new Error('Mineflyer authentication required. Please start authentication via admin panel first.');
         }
         
-        // Fallback to code-based auth
-        const code = this.botData.mineflyer_code;
-        
-        if (!code) {
-            throw new Error('Mineflyer authentication required. Please authenticate via admin panel first.');
-        }
+        // According to Mineflayer documentation, we need to use mineflayer-alt-auth
+        // This will display a code in the console that needs to be entered on Microsoft.com/link
+        console.log(`[${this.botName}] Starting Mineflyer authentication...`);
+        console.log(`[${this.botName}] Authentication code will be displayed in console`);
+        console.log(`[${this.botName}] Please enter the code on Microsoft.com/link`);
         
         return {
-            type: 'mineflyer_code',
-            username: this.botData.player_username,
-            code: code
+            type: 'microsoft',
+            username: this.botData.player_username || 'DonutBetsBot',
+            authTitle: 'Mineflyer Authentication'
         };
     }
     
